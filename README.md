@@ -7,6 +7,7 @@ api to support the expense tracker mobile app.
 - [echo](https://github.com/labstack/echo)
 - [mongo-driver](https://github.com/mongodb/mongo-go-driver)
 - [air](https://github.com/cosmtrek/air)
+- [swag](https://github.com/swaggo/swag/cmd/swag)
 
 ## run local developemnt environment
 
