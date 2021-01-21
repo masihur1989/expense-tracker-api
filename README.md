@@ -10,13 +10,15 @@ api to support the expense tracker mobile app.
 
 ## run local developemnt environment
 
-needs to install `air` globally. can be done by this 
+Need to install `air` & `swag` globally. Can be done by this 
 
 ```go
 go get -u github.com/cosmtrek/air
+
+go get -u github.com/swaggo/swag/cmd/swag
 ```
 
-to spin up the development stack simply run 
+To spin up the development stack simply run 
 
 ```shell
 make dev
