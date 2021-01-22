@@ -49,7 +49,7 @@ func main() {
 	e.GET("/", Ping)
 	e.GET("/docs/*", echoSwagger.WrapHandler)
 
-	// reoute version /api/v1
+	// route versioning /api/v1
 	g := e.Group("/api/v1")
 	handler.NewUserHandler(g, client)
 
