@@ -21,15 +21,15 @@ type UserHandler struct {
 
 // NewUserHandler scho.Echo handler function
 func NewUserHandler(e *echo.Group, dbClient db.MongoDBClient) {
-	userController := UserHandler{
+	userHandler := UserHandler{
 		DBClient: dbClient,
 	}
 	// users routes
-	e.GET("/users/", userController.GetUsers)
-	e.GET("/users/:id", userController.GetUser)
-	e.POST("/users", userController.CreateUser)
-	e.PUT("/users/:id", userController.UpdateUser)
-	e.DELETE("/users/:id", userController.DeleteUser)
+	e.GET("/users/", userHandler.GetUsers)
+	e.GET("/users/:id", userHandler.GetUser)
+	e.POST("/users", userHandler.CreateUser)
+	e.PUT("/users/:id", userHandler.UpdateUser)
+	e.DELETE("/users/:id", userHandler.DeleteUser)
 }
 
 // CreateUser godoc
@@ -44,20 +44,19 @@ func NewUserHandler(e *echo.Group, dbClient db.MongoDBClient) {
 // @Router /api/v1/users [post]
 func (u *UserHandler) CreateUser(c echo.Context) error {
 	user := new(models.User)
-	// fill the nill values
-	user.ID = primitive.NewObjectID()
-	user.CreatedAt = time.Now()
-	user.UpdatedAt = time.Now()
-
 	if err := c.Bind(user); err != nil {
 		log.Printf("ECHO BINDING ERROR: %v\n", err)
 		return err
 	}
 
-	if validErrs := user.UserPostValidator(); len(validErrs) > 0 {
-		err := map[string]interface{}{"validationError": validErrs}
-		return c.JSON(http.StatusBadRequest, err)
+	if err := c.Validate(user); err != nil {
+		return utils.Error(http.StatusBadRequest, err.Error(), c)
 	}
+
+	// fill the nill values
+	user.ID = primitive.NewObjectID()
+	user.CreatedAt = time.Now()
+	user.UpdatedAt = time.Now()
 
 	id, err := u.DBClient.InsertNewUser(user)
 
@@ -180,17 +179,21 @@ func (u *UserHandler) UpdateUser(c echo.Context) error {
 		return utils.Error(http.StatusBadRequest, err.Error(), c)
 	}
 
-	user := new(models.User)
+	userInput := new(models.UserUpdateInput)
 
-	if err := c.Bind(user); err != nil {
+	if err := c.Bind(userInput); err != nil {
 		log.Printf("ECHO BINDING ERROR: %v\n", err)
 		return err
 	}
 
+	if err := c.Validate(userInput); err != nil {
+		return utils.Error(http.StatusBadRequest, err.Error(), c)
+	}
+
 	// update fields - name, is_active, updated_at
 	update := bson.M{
-		"name":       user.Name,
-		"is_active":  user.IsActive,
+		"name":       userInput.Name,
+		"is_active":  userInput.IsActive,
 		"updated_at": time.Now(),
 	}
 

@@ -10,7 +10,9 @@ import (
 	_ "github.com/masihur1989/expense-tracker-api/docs" // you need to update github.com/rizalgowandy/go-swag-sample with your own project path
 	db "github.com/masihur1989/expense-tracker-api/internal/db"
 	"github.com/masihur1989/expense-tracker-api/internal/handler"
+	"github.com/masihur1989/expense-tracker-api/internal/models"
 	echoSwagger "github.com/swaggo/echo-swagger"
+	"gopkg.in/go-playground/validator.v9"
 )
 
 // @title Palki-CMS Swagger API
@@ -34,6 +36,9 @@ func main() {
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
 	e.Use(middleware.CORS())
+
+	validate := validator.New()
+	e.Validator = &models.Validator{Validator: validate}
 
 	client, err := db.GetClient()
 	if err != nil {
