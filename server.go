@@ -1,11 +1,15 @@
 package main
 
 import (
+	"log"
 	"net/http"
 
+	_ "github.com/joho/godotenv/autoload"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	_ "github.com/masihur1989/expense-tracker-api/docs" // you need to update github.com/rizalgowandy/go-swag-sample with your own project path
+	db "github.com/masihur1989/expense-tracker-api/internal/db"
+	"github.com/masihur1989/expense-tracker-api/internal/handler"
 	echoSwagger "github.com/swaggo/echo-swagger"
 )
 
@@ -31,9 +35,18 @@ func main() {
 	e.Use(middleware.Recover())
 	e.Use(middleware.CORS())
 
+	client, err := db.GetClient()
+	if err != nil {
+		log.Panicf("DB CONNECTION ERROR: %f", err)
+	}
+
 	// routes
 	e.GET("/", Ping)
 	e.GET("/docs/*", echoSwagger.WrapHandler)
+
+	// reoute version /api/v1
+	g := e.Group("/api/v1")
+	handler.NewUserHandler(g, client)
 
 	e.Logger.Fatal(e.Start(":1323"))
 }
@@ -49,5 +62,18 @@ func main() {
 func Ping(c echo.Context) error {
 	return c.JSON(http.StatusOK, map[string]interface{}{
 		"message": "Server is up and running",
+	})
+}
+
+// DbPing check for db to be connected
+func DbPing(c echo.Context) error {
+	_, err := db.GetClient()
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]interface{}{
+			"message": "DB Connection Error",
+		})
+	}
+	return c.JSON(http.StatusOK, map[string]interface{}{
+		"message": "DB Connected",
 	})
 }
