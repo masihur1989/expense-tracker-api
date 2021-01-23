@@ -2,22 +2,12 @@ package db
 
 import (
 	"context"
+	"github.com/masihur1989/expense-tracker-api/internal/utils"
 	"sync"
 
-	"github.com/masihur1989/expense-tracker-api/internal/models"
-	"github.com/masihur1989/expense-tracker-api/internal/utils"
-	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
-
-// Client Interface to hold all the client related func
-type Client interface {
-	InsertNewUser(user *models.User) (interface{}, error)
-	ReadOneUser(filter bson.M) (models.User, error)
-	ReadAllUsers(filter interface{}) ([]*models.User, error)
-	RemoveOneUser(filter bson.M) (int64, error)
-}
 
 // MongoDBClient mongo db client needed for the project
 type MongoDBClient struct {
@@ -37,15 +27,12 @@ var mongoOnce sync.Once
 
 var mongoDbInstance, dbInstance string
 
-func init() {
-	mongoDbInstance = utils.MustGet("MONGO_DB_INSTANCE")
-	dbInstance = utils.MustGet("DB_INSTANCE")
-}
-
 // GetClient get the db client
 func GetClient() (MongoDBClient, error) {
 	//Perform connection creation operation only once.
 	mongoOnce.Do(func() {
+		mongoDbInstance = utils.MustGet("MONGO_DB_INSTANCE")
+		dbInstance = utils.MustGet("DB_INSTANCE")
 		// Set client options
 		clientOptions := options.Client().ApplyURI(mongoDbInstance)
 		// Connect to MongoDB

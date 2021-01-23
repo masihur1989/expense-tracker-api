@@ -25,3 +25,8 @@ To spin up the development stack simply run
 make dev
 ```
 
+To run tests
+
+```go
+go test ./...
+```

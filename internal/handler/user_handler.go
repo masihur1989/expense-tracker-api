@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/labstack/echo/v4"
-	"github.com/masihur1989/expense-tracker-api/internal/db"
 	"github.com/masihur1989/expense-tracker-api/internal/models"
 	"github.com/masihur1989/expense-tracker-api/internal/utils"
 	"go.mongodb.org/mongo-driver/bson"
@@ -16,20 +15,12 @@ import (
 
 // UserHandler controller for users
 type UserHandler struct {
-	DBClient db.MongoDBClient
+	userModel models.UserModel
 }
 
-// NewUserHandler scho.Echo handler function
-func NewUserHandler(e *echo.Group, dbClient db.MongoDBClient) {
-	userHandler := UserHandler{
-		DBClient: dbClient,
-	}
-	// users routes
-	e.GET("/users/", userHandler.GetUsers)
-	e.GET("/users/:id", userHandler.GetUser)
-	e.POST("/users", userHandler.CreateUser)
-	e.PUT("/users/:id", userHandler.UpdateUser)
-	e.DELETE("/users/:id", userHandler.DeleteUser)
+// NewUserHandler echo.Echo handler function
+func NewUserHandler(um models.UserModel) UserHandler {
+	return UserHandler{um}
 }
 
 // CreateUser godoc
@@ -42,7 +33,7 @@ func NewUserHandler(e *echo.Group, dbClient db.MongoDBClient) {
 // @Failure 400 {object} utils.Response
 // @Failure 500 {object} utils.Response
 // @Router /api/v1/users [post]
-func (u *UserHandler) CreateUser(c echo.Context) error {
+func (u UserHandler) CreateUser(c echo.Context) error {
 	user := new(models.User)
 	if err := c.Bind(user); err != nil {
 		log.Printf("ECHO BINDING ERROR: %v\n", err)
@@ -53,12 +44,12 @@ func (u *UserHandler) CreateUser(c echo.Context) error {
 		return utils.Error(http.StatusBadRequest, err.Error(), c)
 	}
 
-	// fill the nill values
+	// fill the nil values
 	user.ID = primitive.NewObjectID()
 	user.CreatedAt = time.Now()
 	user.UpdatedAt = time.Now()
 
-	id, err := u.DBClient.InsertNewUser(user)
+	id, err := u.userModel.InsertNewUser(user)
 
 	if err != nil {
 		log.Printf("RESPONSE ERROR: %v\n", err)
@@ -82,7 +73,7 @@ func (u *UserHandler) CreateUser(c echo.Context) error {
 // @Failure 400 {object} utils.Response
 // @Failure 500 {object} utils.Response
 // @Router /api/v1/users [get]
-func (u *UserHandler) GetUsers(c echo.Context) error {
+func (u UserHandler) GetUsers(c echo.Context) error {
 	qs := c.QueryParams()
 	var filter interface{}
 	if len(c.QueryParams()) == 0 {
@@ -104,7 +95,7 @@ func (u *UserHandler) GetUsers(c echo.Context) error {
 		filter = f
 	}
 
-	users, err := u.DBClient.ReadAllUsers(filter)
+	users, err := u.userModel.ReadAllUsers(filter)
 	if err != nil {
 		log.Println(err)
 		return utils.Error(http.StatusInternalServerError, err.Error(), c)
@@ -124,12 +115,12 @@ func (u *UserHandler) GetUsers(c echo.Context) error {
 // @Failure 404 {object} utils.Response
 // @Failure 500 {object} utils.Response
 // @Router /api/v1/users/{id} [get]
-func (u *UserHandler) GetUser(c echo.Context) error {
+func (u UserHandler) GetUser(c echo.Context) error {
 	userID, err := objectIDFromStringID(c.Param("id"))
 	if err != nil {
 		return utils.Error(http.StatusBadRequest, err.Error(), c)
 	}
-	user, err := u.DBClient.ReadOneUser(bson.M{"_id": userID})
+	user, err := u.userModel.ReadOneUser(bson.M{"_id": userID})
 	if err != nil {
 		log.Println(err)
 		return utils.Error(http.StatusNotFound, err.Error(), c)
@@ -148,13 +139,13 @@ func (u *UserHandler) GetUser(c echo.Context) error {
 // @Failure 400 {object} utils.Response
 // @Failure 404 {object} utils.Response
 // @Router /api/v1/users/{id} [delete]
-func (u *UserHandler) DeleteUser(c echo.Context) error {
+func (u UserHandler) DeleteUser(c echo.Context) error {
 	userID, err := objectIDFromStringID(c.Param("id"))
 	if err != nil {
 		return utils.Error(http.StatusBadRequest, err.Error(), c)
 	}
 
-	count, err := u.DBClient.RemoveOneUser(bson.M{"_id": userID})
+	count, err := u.userModel.RemoveOneUser(bson.M{"_id": userID})
 	if err != nil {
 		log.Println(err)
 		return utils.Error(http.StatusNotFound, err.Error(), c)
@@ -173,7 +164,7 @@ func (u *UserHandler) DeleteUser(c echo.Context) error {
 // @Failure 400 {object} utils.Response
 // @Failure 404 {object} utils.Response
 // @Router /api/v1/users/{id} [put]
-func (u *UserHandler) UpdateUser(c echo.Context) error {
+func (u UserHandler) UpdateUser(c echo.Context) error {
 	userID, err := objectIDFromStringID(c.Param("id"))
 	if err != nil {
 		return utils.Error(http.StatusBadRequest, err.Error(), c)
@@ -197,7 +188,7 @@ func (u *UserHandler) UpdateUser(c echo.Context) error {
 		"updated_at": time.Now(),
 	}
 
-	count, err := u.DBClient.UpdateOneUser(update, bson.M{"_id": userID})
+	count, err := u.userModel.UpdateOneUser(update, bson.M{"_id": userID})
 	if err != nil {
 		log.Println(err)
 		return utils.Error(http.StatusNotFound, err.Error(), c)

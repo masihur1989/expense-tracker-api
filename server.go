@@ -41,14 +41,23 @@ func main() {
 	e.GET("/", handler.Ping)
 	e.GET("/docs/*", echoSwagger.WrapHandler)
 
-	// route versioning /api/v1
-	g := e.Group("/api/v1")
 	// initialize db client
 	client, err := db.GetClient()
 	if err != nil {
 		log.Panicf("DB CONNECTION ERROR: %f", err)
 	}
-	handler.NewUserHandler(g, client)
+	// models
+	userModel := models.NewUserModelImpl(client)
+	// route versioning /api/v1
+	g := e.Group("/api/v1")
+	// handlers
+	userHandler := handler.NewUserHandler(userModel)
+	// users routes
+	g.GET("/users/", userHandler.GetUsers)
+	g.GET("/users/:id", userHandler.GetUser)
+	g.POST("/users", userHandler.CreateUser)
+	g.PUT("/users/:id", userHandler.UpdateUser)
+	g.DELETE("/users/:id", userHandler.DeleteUser)
 
 	e.Logger.Fatal(e.Start(":1323"))
 }
