@@ -19,7 +19,7 @@ import (
 	customMiddleware "github.com/masihur1989/expense-tracker-api/internal/middleware"
 )
 
-// @title Palki-CMS Swagger API
+// @title Expense Tracker Swagger API
 // @version 1.0
 // @description This is a sample server server.
 // @termsOfService http://swagger.io/terms/
@@ -31,7 +31,7 @@ import (
 // @license.name Apache 2.0
 // @license.url http://www.apache.org/licenses/LICENSE-2.0.html
 
-// @host localhost:3000
+// @host localhost:1323
 // @BasePath /
 // @schemes http https
 func main() {
@@ -48,16 +48,23 @@ func main() {
 	}
 	// models
 	userModel := models.NewUserModelImpl(client)
+	categoryModel := models.NewCategoryModel(client)
 	// route versioning /api/v1
 	g := e.Group("/api/v1")
 	// handlers
 	userHandler := handler.NewUserHandler(userModel)
+	categoryHandler := handler.NewCategoryHandler(categoryModel)
 	// users routes
 	g.GET("/users/", userHandler.GetUsers)
 	g.GET("/users/:id", userHandler.GetUser)
 	g.POST("/users", userHandler.CreateUser)
 	g.PUT("/users/:id", userHandler.UpdateUser)
 	g.DELETE("/users/:id", userHandler.DeleteUser)
+	// categories routes
+	g.GET("/categories", categoryHandler.GetCategories)
+	g.POST("/categories", categoryHandler.CreateCategory)
+	g.PUT("/categories/:id", categoryHandler.UpdateCategory)
+	g.DELETE("/categories/:id", categoryHandler.DeleteCategory)
 
 	e.Logger.Fatal(e.Start(":1323"))
 }
