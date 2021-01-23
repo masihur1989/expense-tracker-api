@@ -1,11 +1,15 @@
 package models
 
 import (
+	"errors"
+
+	ut "github.com/go-playground/universal-translator"
 	"gopkg.in/go-playground/validator.v9"
 )
 
-// Validator is implementation of validation of rquest values.
+// Validator is implementation of validation of request values.
 type Validator struct {
+	Trans     ut.Translator
 	Validator *validator.Validate
 }
 
@@ -16,5 +20,13 @@ func (v *Validator) Validate(i interface{}) error {
 		return nil
 	}
 	errs := err.(validator.ValidationErrors)
-	return errs
+	// return pretty errors
+	msg := ""
+	for _, v := range errs.Translate(v.Trans) {
+		if msg != "" {
+			msg += ", "
+		}
+		msg += v
+	}
+	return errors.New(msg)
 }

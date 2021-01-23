@@ -2,8 +2,9 @@ package main
 
 import (
 	"log"
-	"net/http"
 
+	"github.com/go-playground/locales/en"
+	ut "github.com/go-playground/universal-translator"
 	_ "github.com/joho/godotenv/autoload"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -13,6 +14,9 @@ import (
 	"github.com/masihur1989/expense-tracker-api/internal/models"
 	echoSwagger "github.com/swaggo/echo-swagger"
 	"gopkg.in/go-playground/validator.v9"
+	en_translations "gopkg.in/go-playground/validator.v9/translations/en"
+
+	customMiddleware "github.com/masihur1989/expense-tracker-api/internal/middleware"
 )
 
 // @title Palki-CMS Swagger API
@@ -31,54 +35,64 @@ import (
 // @BasePath /
 // @schemes http https
 func main() {
-	e := echo.New()
-	// Middleware
-	e.Use(middleware.Logger())
-	e.Use(middleware.Recover())
-	e.Use(middleware.CORS())
-
-	validate := validator.New()
-	e.Validator = &models.Validator{Validator: validate}
-
-	client, err := db.GetClient()
-	if err != nil {
-		log.Panicf("DB CONNECTION ERROR: %f", err)
-	}
-
+	// setup echo
+	e := SetupEcho()
 	// routes
-	e.GET("/", Ping)
+	e.GET("/", handler.Ping)
 	e.GET("/docs/*", echoSwagger.WrapHandler)
 
 	// route versioning /api/v1
 	g := e.Group("/api/v1")
+	// initialize db client
+	client, err := db.GetClient()
+	if err != nil {
+		log.Panicf("DB CONNECTION ERROR: %f", err)
+	}
 	handler.NewUserHandler(g, client)
 
 	e.Logger.Fatal(e.Start(":1323"))
 }
 
-// Ping godoc
-// @Summary Show the status of server.
-// @Description get the status of server.
-// @Tags root
-// @Accept */*
-// @Produce json
-// @Success 200 {object} map[string]interface{}
-// @Router / [get]
-func Ping(c echo.Context) error {
-	return c.JSON(http.StatusOK, map[string]interface{}{
-		"message": "Server is up and running",
-	})
+/*******************************************************************************************************
+										SETUP FUNCTIONS
+*******************************************************************************************************/
+
+// SetupEcho set echo server
+func SetupEcho() *echo.Echo {
+	e := echo.New()
+	// Middleware
+	e.Use(middleware.Logger())
+	e.Use(middleware.Recover())
+	e.Use(middleware.CORS())
+	// custom middlewares
+	e.Use(customMiddleware.RequestHeaders())
+	// setup validator
+	trans := SetupTranslator()
+	validate := SetupCustomValidator(trans)
+	e.Validator = &models.Validator{Validator: validate, Trans: trans}
+	return e
 }
 
-// DbPing check for db to be connected
-func DbPing(c echo.Context) error {
-	_, err := db.GetClient()
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError, map[string]interface{}{
-			"message": "DB Connection Error",
-		})
+// SetupTranslator set the translator
+func SetupTranslator() ut.Translator {
+	translator := en.New()
+	uni := ut.New(translator, translator)
+
+	trans, found := uni.GetTranslator("en")
+	log.Printf("SetupTranslator: trans %v\n", trans)
+	if !found {
+		log.Fatalln("translator not found")
 	}
-	return c.JSON(http.StatusOK, map[string]interface{}{
-		"message": "DB Connected",
-	})
+	return trans
+}
+
+// SetupCustomValidator set the custom validator
+func SetupCustomValidator(trans ut.Translator) *validator.Validate {
+	v := validator.New()
+
+	if err := en_translations.RegisterDefaultTranslations(v, trans); err != nil {
+		log.Fatal(err)
+	}
+
+	return v
 }
