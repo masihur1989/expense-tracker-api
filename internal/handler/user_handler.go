@@ -29,6 +29,7 @@ func NewUserHandler(um models.UserModel) UserHandler {
 // @Tags users
 // @Accept json
 // @Produce json
+// @Param user body models.User true "Create User"
 // @Success 201 {object} utils.Response
 // @Failure 400 {object} utils.Response
 // @Failure 500 {object} utils.Response
@@ -159,6 +160,7 @@ func (u UserHandler) DeleteUser(c echo.Context) error {
 // @Tags users
 // @Accept json
 // @Produce json
+// @Param user body models.UserUpdateInput true "Update User"
 // @Param id path string true "User ID"
 // @Success 200 {object} utils.Response
 // @Failure 400 {object} utils.Response

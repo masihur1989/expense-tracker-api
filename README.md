@@ -25,6 +25,8 @@ To spin up the development stack simply run
 make dev
 ```
 
+the development server will run at `http://localhost:1323`. Api document will be available at `http://localhost:1323/docs/index.html`
+
 To run tests
 
 ```go
