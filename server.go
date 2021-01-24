@@ -49,11 +49,13 @@ func main() {
 	// models
 	userModel := models.NewUserModelImpl(client)
 	categoryModel := models.NewCategoryModel(client)
+	expenseModel := models.NewExpenseModel(client)
 	// route versioning /api/v1
 	g := e.Group("/api/v1")
 	// handlers
 	userHandler := handler.NewUserHandler(userModel)
 	categoryHandler := handler.NewCategoryHandler(categoryModel)
+	expensedeHandler := handler.NewExpenseHandler(expenseModel, userModel, categoryModel)
 	// users routes
 	g.GET("/users/", userHandler.GetUsers)
 	g.GET("/users/:id", userHandler.GetUser)
@@ -65,6 +67,12 @@ func main() {
 	g.POST("/categories", categoryHandler.CreateCategory)
 	g.PUT("/categories/:id", categoryHandler.UpdateCategory)
 	g.DELETE("/categories/:id", categoryHandler.DeleteCategory)
+	// expense routes
+	g.GET("/expenses", expensedeHandler.GetExpenses)
+	g.GET("/expenses/:id", expensedeHandler.GetExpense)
+	g.POST("/expenses", expensedeHandler.CreateExpense)
+	g.PUT("/expenses/:id", expensedeHandler.UpdateExpense)
+	g.DELETE("/expenses/:id", expensedeHandler.DeleteExpense)
 
 	e.Logger.Fatal(e.Start(":1323"))
 }
@@ -93,9 +101,7 @@ func SetupEcho() *echo.Echo {
 func SetupTranslator() ut.Translator {
 	translator := en.New()
 	uni := ut.New(translator, translator)
-
 	trans, found := uni.GetTranslator("en")
-	log.Printf("SetupTranslator: trans %v\n", trans)
 	if !found {
 		log.Fatalln("translator not found")
 	}
@@ -105,10 +111,8 @@ func SetupTranslator() ut.Translator {
 // SetupCustomValidator set the custom validator
 func SetupCustomValidator(trans ut.Translator) *validator.Validate {
 	v := validator.New()
-
 	if err := en_translations.RegisterDefaultTranslations(v, trans); err != nil {
 		log.Fatal(err)
 	}
-
 	return v
 }
