@@ -26,7 +26,8 @@ type CategoryUpdateInput struct {
 // CategoryModeler godoc
 type CategoryModeler interface {
 	Insert(catergory *Category) (interface{}, error)
-	ReadAll(filter interface{}) ([]*Category, error)
+	ReadAll(filter interface{}) ([]Category, error)
+	ReadOne(filter interface{}) (Category, error)
 	UpdateOne(updatedData interface{}, filter interface{}) (int64, error)
 	RemoveOne(filter interface{}) (int64, error)
 }
@@ -53,8 +54,8 @@ func (c *CategoryModel) Insert(catergory *Category) (interface{}, error) {
 }
 
 // ReadAll read all the categories
-func (c *CategoryModel) ReadAll(filter interface{}) ([]*Category, error) {
-	var categories []*Category
+func (c *CategoryModel) ReadAll(filter interface{}) ([]Category, error) {
+	var categories []Category
 	collection := c.db.Client.Database(c.db.DBName).Collection("categories")
 	cur, err := collection.Find(context.TODO(), filter)
 	if err != nil {
@@ -67,10 +68,19 @@ func (c *CategoryModel) ReadAll(filter interface{}) ([]*Category, error) {
 		if err != nil {
 			log.Printf("Error on Decoding the document: %v\n", err)
 		}
-		categories = append(categories, &category)
+		categories = append(categories, category)
 	}
 	log.Printf("documentReturned: %v\n", categories)
 	return categories, nil
+}
+
+// ReadOne read a single category
+func (c *CategoryModel) ReadOne(filter interface{}) (Category, error) {
+	var category Category
+	collection := c.db.Client.Database(c.db.DBName).Collection("categories")
+	documentReturned := collection.FindOne(context.TODO(), filter)
+	documentReturned.Decode(&category)
+	return category, nil
 }
 
 // UpdateOne update one category from collections

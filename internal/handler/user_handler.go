@@ -63,7 +63,7 @@ func (u UserHandler) CreateUser(c echo.Context) error {
 // GetUsers godoc
 // get all the users
 // QueryParams accepted are is_active, role
-// and only single value is used. TODO needs to find a way to accept array of query pamra values
+// and only single value is used. TODO: needs to find a way to accept array of query pamra values
 // @Summary Get Users.
 // @Description get user by ID
 // @Tags users
@@ -131,7 +131,7 @@ func (u UserHandler) GetUser(c echo.Context) error {
 
 // DeleteUser godoc
 // @Summary Delete an User.
-// @Description get user by ID
+// @Description delete user by ID
 // @Tags users
 // @Accept json
 // @Produce json

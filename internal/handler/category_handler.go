@@ -60,11 +60,11 @@ func (c CategoryHandler) CreateCategory(e echo.Context) error {
 }
 
 // GetCategories godoc
-// get all the users
+// get all the categories
 // QueryParams accepted are name
 // and only single value is used. TODO needs to find a way to accept array of query pamra values
 // @Summary Get Categories.
-// @Description get category by ID
+// @Description get categories
 // @Tags categories
 // @Accept json
 // @Produce json

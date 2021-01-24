@@ -106,7 +106,7 @@ func (c *UserModelImpl) RemoveOneUser(filter interface{}) (int64, error) {
 	collection := c.db.Client.Database(c.db.DBName).Collection("users")
 	deleteResult, err := collection.DeleteOne(context.TODO(), filter)
 	if err != nil {
-		log.Fatal("Error on deleting one Hero", err)
+		log.Fatal("Error on deleting one user", err)
 		return 0, err
 	}
 	return deleteResult.DeletedCount, nil
@@ -118,7 +118,7 @@ func (c *UserModelImpl) UpdateOneUser(updatedData interface{}, filter interface{
 	atualizacao := bson.D{{Key: "$set", Value: updatedData}}
 	updatedResult, err := collection.UpdateOne(context.TODO(), filter, atualizacao)
 	if err != nil {
-		log.Fatal("Error on updating one Hero", err)
+		log.Fatal("Error on updating one user", err)
 		return 0, err
 	}
 	return updatedResult.ModifiedCount, nil
