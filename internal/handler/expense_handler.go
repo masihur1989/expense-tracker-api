@@ -250,7 +250,7 @@ func (e ExpenseHandler) UpdateExpense(c echo.Context) error {
 		return utils.Error(http.StatusNotFound, err.Error(), c)
 	}
 
-	// update fields - name, is_active, updated_at
+	// update fields - title. description, date, category, location, total, status, inserted_by
 	update := bson.M{
 		"title":       expInput.Title,
 		"description": expInput.Description,
