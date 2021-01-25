@@ -27,14 +27,14 @@ type Expense struct {
 
 // ExpenseInput expense create input model
 type ExpenseInput struct {
-	Date        time.Time `json:"date" bson:"date" validate:"required"`
-	Title       string    `json:"title" bson:"title" validate:"required"`
-	Description string    `json:"description" bson:"description" validate:"required"`
-	Location    string    `json:"location" bson:"location"`
-	Total       float64   `json:"total" bson:"total" validate:"required"`
-	Status      string    `json:"status" bson:"status" validate:"required,oneof=pending confirmed"`
-	CategoryID  string    `json:"category_id" bson:"category_id" validate:"required"`
-	InsertedBy  string    `json:"inserted_by" bson:"inserted_by" validate:"required"`
+	Date        string  `json:"date" bson:"date" validate:"required"` // string date give more controll to parse it in any form for storage
+	Title       string  `json:"title" bson:"title" validate:"required"`
+	Description string  `json:"description" bson:"description" validate:"required"`
+	Location    string  `json:"location" bson:"location"`
+	Total       float64 `json:"total" bson:"total" validate:"required"`
+	Status      string  `json:"status" bson:"status" validate:"required,oneof=pending confirmed"`
+	CategoryID  string  `json:"category_id" bson:"category_id" validate:"required"`
+	InsertedBy  string  `json:"inserted_by" bson:"inserted_by" validate:"required"`
 }
 
 // ExpenseModeler godoc

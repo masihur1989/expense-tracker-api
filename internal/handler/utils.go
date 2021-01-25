@@ -2,6 +2,7 @@ package handler
 
 import (
 	"log"
+	"time"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -15,4 +16,9 @@ func objectIDFromStringID(param string) (primitive.ObjectID, error) {
 		return primitive.NilObjectID, err
 	}
 	return id, nil
+}
+
+// parseDateToFormat parse date string to desired fromat
+func parseDateToFormat(layout, date string) (time.Time, error) {
+	return time.Parse(layout, date)
 }

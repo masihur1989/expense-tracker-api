@@ -69,13 +69,19 @@ func (e ExpenseHandler) CreateExpense(c echo.Context) error {
 		return utils.Error(http.StatusNotFound, err.Error(), c)
 	}
 
+	d, err := parseDateToFormat("2006-01-02", expInput.Date)
+	if err != nil {
+		log.Printf("Time Parsing Error %v", err)
+		return utils.Error(http.StatusInternalServerError, err.Error(), c)
+	}
+
 	exp := models.Expense{
 		ID:          primitive.NewObjectID(),
 		CreatedAt:   time.Now(),
 		UpdatedAt:   time.Now(),
 		Title:       expInput.Title,
 		Description: expInput.Description,
-		Date:        expInput.Date, // TODO: needs to finalize the format
+		Date:        d, // TODO: needs to finalize the format
 		Category:    category,
 		Location:    expInput.Location,
 		Total:       expInput.Total,
@@ -125,20 +131,24 @@ func (e ExpenseHandler) GetExpenses(c echo.Context) error {
 		var startDate, endDate time.Time
 		var err error
 
-		startDate, err = time.Parse("2006-01-02", f["start"])
+		startDate, err = parseDateToFormat("2006-01-02", f["start"])
 		if err != nil {
-			log.Printf("EDDIR PARSING STARTDATE: %v\n", err)
+			log.Printf("ERROR PARSING STARTDATE: %v\n", err)
+			return utils.Error(http.StatusBadRequest, err.Error(), c)
 		}
 
-		endDate, err = time.Parse("2006-01-02", f["end"])
+		endDate, err = parseDateToFormat("2006-01-02", f["end"])
 		if err != nil {
-			log.Printf("EDDIR PARSING ENDDATE: %v\n", err)
+			log.Printf("ERROR PARSING ENDDATE: %v\n", err)
+			return utils.Error(http.StatusBadRequest, err.Error(), c)
 		}
 
-		filter = bson.M{"date": bson.M{
-			"$gte": startDate,
-			"$lt":  endDate, // time.Now().Add(-1 * 24 * time.Hour)
-		}}
+		filter = bson.D{
+			{"date", bson.D{
+				{"$gte", startDate},
+				{"$lt", endDate}, // time.Now().Add(-1 * 24 * time.Hour)
+			}},
+		}
 	}
 
 	cats, err := e.expenseModel.ReadAll(filter)
