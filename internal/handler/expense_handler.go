@@ -30,7 +30,7 @@ func NewExpenseHandler(em models.ExpenseModeler, um models.UserModel, cm models.
 // @Tags expenses
 // @Accept json
 // @Produce json
-// @Param category body models.ExpenseInput true "Create Expense"
+// @Param expense body models.ExpenseInput true "Create Expense"
 // @Success 201 {object} utils.Response
 // @Failure 400 {object} utils.Response
 // @Failure 404 {object} utils.Response
@@ -81,7 +81,7 @@ func (e ExpenseHandler) CreateExpense(c echo.Context) error {
 		UpdatedAt:   time.Now(),
 		Title:       expInput.Title,
 		Description: expInput.Description,
-		Date:        d, // TODO: needs to finalize the format
+		Date:        d,
 		Category:    category,
 		Location:    expInput.Location,
 		Total:       expInput.Total,
@@ -187,7 +187,7 @@ func (e ExpenseHandler) GetExpense(c echo.Context) error {
 // DeleteExpense godoc
 // @Summary Delete a Expense.
 // @Description delete expense by ID
-// @Tags expense
+// @Tags expenses
 // @Accept json
 // @Produce json
 // @Param id path string true "Expense ID"
@@ -215,7 +215,7 @@ func (e ExpenseHandler) DeleteExpense(c echo.Context) error {
 // @Tags expenses
 // @Accept json
 // @Produce json
-// @Param user body models.ExpenseInput true "Update Expense"
+// @Param expense body models.ExpenseInput true "Update Expense"
 // @Param id path string true "Expense ID"
 // @Success 200 {object} utils.Response
 // @Failure 400 {object} utils.Response

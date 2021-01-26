@@ -2,8 +2,11 @@ package db
 
 import (
 	"context"
-	"github.com/masihur1989/expense-tracker-api/internal/utils"
+	"log"
 	"sync"
+	"time"
+
+	"github.com/masihur1989/expense-tracker-api/internal/utils"
 
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -36,13 +39,17 @@ func GetClient() (MongoDBClient, error) {
 		// Set client options
 		clientOptions := options.Client().ApplyURI(mongoDbInstance)
 		// Connect to MongoDB
-		client, err := mongo.Connect(context.TODO(), clientOptions)
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+		client, err := mongo.Connect(ctx, clientOptions)
 		if err != nil {
+			log.Printf("error: %v", err)
 			clientInstanceError = err
 		}
 		// Check the connection
 		err = client.Ping(context.TODO(), nil)
 		if err != nil {
+			log.Printf("error: %v", err)
 			clientInstanceError = err
 		}
 		clientInstance = client
