@@ -8,6 +8,7 @@ import (
 	"github.com/masihur1989/expense-tracker-api/internal/db"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 // Expense expesne model
@@ -72,7 +73,10 @@ func (e *ExpenseModel) ReadAll(filter interface{}) ([]Expense, error) {
 	var expenses []Expense
 	collection := e.db.Client.Database(e.db.DBName).Collection("expenses")
 	log.Printf("filter: %v\n", filter)
-	cur, err := collection.Find(context.TODO(), filter)
+	// sort the entries based on the `date` field
+	opts := options.FindOptions{}
+	opts.SetSort(bson.D{{"date", -1}})
+	cur, err := collection.Find(context.TODO(), filter, &opts)
 	if err != nil {
 		log.Printf("ERROR FINDING DATA: %v\n", err)
 		return expenses, err

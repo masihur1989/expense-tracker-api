@@ -215,7 +215,7 @@ func (e ExpenseHandler) DeleteExpense(c echo.Context) error {
 // @Tags expenses
 // @Accept json
 // @Produce json
-// @Param user body models.ExpenseUpdateInput true "Update Expense"
+// @Param user body models.ExpenseInput true "Update Expense"
 // @Param id path string true "Expense ID"
 // @Success 200 {object} utils.Response
 // @Failure 400 {object} utils.Response
