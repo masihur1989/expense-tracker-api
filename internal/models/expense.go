@@ -22,6 +22,7 @@ type Expense struct {
 	Location    string             `json:"location" bson:"location"`
 	Total       float64            `json:"total" bson:"total"`
 	Status      string             `json:"status" bson:"status"`
+	ProjectID   primitive.ObjectID `json:"project_id" bson:"project_id"`
 	Category    Category           `json:"category" bson:"category"`
 	InsertedBy  User               `json:"user" bson:"user"`
 }

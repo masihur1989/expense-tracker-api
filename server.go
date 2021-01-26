@@ -50,12 +50,14 @@ func main() {
 	userModel := models.NewUserModelImpl(client)
 	categoryModel := models.NewCategoryModel(client)
 	expenseModel := models.NewExpenseModel(client)
+	projectModel := models.NewProjectModel(client)
 	// route versioning /api/v1
 	g := e.Group("/api/v1")
 	// handlers
 	userHandler := handler.NewUserHandler(userModel)
 	categoryHandler := handler.NewCategoryHandler(categoryModel)
 	expensedeHandler := handler.NewExpenseHandler(expenseModel, userModel, categoryModel)
+	projectHandler := handler.NewProjectHandler(projectModel)
 	// users routes
 	g.GET("/users/", userHandler.GetUsers)
 	g.GET("/users/:id", userHandler.GetUser)
@@ -73,7 +75,12 @@ func main() {
 	g.POST("/expenses", expensedeHandler.CreateExpense)
 	g.PUT("/expenses/:id", expensedeHandler.UpdateExpense)
 	g.DELETE("/expenses/:id", expensedeHandler.DeleteExpense)
-
+	// project routes
+	g.GET("/projects", projectHandler.GetProjects)
+	g.GET("/project-details/:id", projectHandler.GetProjectExpenses)
+	g.GET("/projects/:id", projectHandler.GetProject)
+	g.POST("/projects", projectHandler.CreateProject)
+	g.POST("/project-users/:id/add", projectHandler.CreateProjectUser)
 	e.Logger.Fatal(e.Start(":1323"))
 }
 
