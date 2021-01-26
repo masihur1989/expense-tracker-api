@@ -77,10 +77,10 @@ func main() {
 	g.DELETE("/expenses/:id", expensedeHandler.DeleteExpense)
 	// project routes
 	g.GET("/projects", projectHandler.GetProjects)
-	g.GET("/project-details/:id", projectHandler.GetProjectExpenses)
+	g.GET("/projects/:id/details", projectHandler.GetProjectExpenses)
 	g.GET("/projects/:id", projectHandler.GetProject)
 	g.POST("/projects", projectHandler.CreateProject)
-	g.POST("/project-users/:id/add", projectHandler.CreateProjectUser)
+	g.POST("/projects/:id/user", projectHandler.CreateProjectUser)
 	e.Logger.Fatal(e.Start(":1323"))
 }
 

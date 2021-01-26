@@ -133,7 +133,7 @@ func (c ProjectHandler) GetProject(e echo.Context) error {
 // @Failure 400 {object} utils.Response
 // @Failure 404 {object} utils.Response
 // @Failure 500 {object} utils.Response
-// @Router /api/v1/project-details/{id} [get]
+// @Router /api/v1/projects/{id}/details [get]
 func (c ProjectHandler) GetProjectExpenses(e echo.Context) error {
 	ID, err := objectIDFromStringID(e.Param("id"))
 	if err != nil {
@@ -191,7 +191,7 @@ func (c ProjectHandler) GetProjectExpenses(e echo.Context) error {
 // @Success 201 {object} utils.Response
 // @Failure 400 {object} utils.Response
 // @Failure 500 {object} utils.Response
-// @Router /api/v1/project-users/:id/add [post]
+// @Router /api/v1/projects/{id}/users [post]
 func (c ProjectHandler) CreateProjectUser(e echo.Context) error {
 	ID, err := objectIDFromStringID(e.Param("id"))
 	if err != nil {
@@ -213,11 +213,10 @@ func (c ProjectHandler) CreateProjectUser(e echo.Context) error {
 	p.UpdatedAt = time.Now()
 
 	id, err := c.projectModel.InsertProjectUser(p)
-
 	if err != nil {
 		log.Printf("RESPONSE ERROR: %v\n", err)
 		return utils.Error(http.StatusInternalServerError, err.Error(), e)
 	}
 
-	return utils.Data(http.StatusCreated, id, "projects created", e)
+	return utils.Data(http.StatusCreated, id, "project user created", e)
 }
