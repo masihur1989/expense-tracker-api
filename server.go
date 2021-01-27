@@ -80,7 +80,13 @@ func main() {
 	g.GET("/projects/:id/details", projectHandler.GetProjectExpenses)
 	g.GET("/projects/:id", projectHandler.GetProject)
 	g.POST("/projects", projectHandler.CreateProject)
-	g.POST("/projects/:id/user", projectHandler.CreateProjectUser)
+	g.DELETE("/projects/:id", projectHandler.DeleteProject)
+
+	g.GET("/projects/:id/users", projectHandler.GetProjectUsers)
+	g.GET("/projects/:id/users/:userId", projectHandler.GetProjectUser)
+	g.POST("/projects/:id/users", projectHandler.CreateProjectUser)
+	g.DELETE("/projects/:id/users/:userId", projectHandler.DeleteProjectUser)
+
 	e.Logger.Fatal(e.Start(":1323"))
 }
 

@@ -22,10 +22,11 @@ type ProjectDetails struct {
 	Users       []User             `json:"users" bson:"users"`
 }
 
-// ProjectExpenseQS Query String parser for project-details query
-type ProjectExpenseQS struct {
-	Start time.Time `json:"start"`
-	End   time.Time `json:"end"`
+// ProjectDetailsQS Query String parser for project details query
+type ProjectDetailsQS struct {
+	Start    time.Time `json:"start"`
+	End      time.Time `json:"end"`
+	IsActive bool      `json:"is_active"`
 }
 
 // Project collection structure
@@ -33,18 +34,19 @@ type Project struct {
 	ID          primitive.ObjectID `json:"id" bson:"_id"`
 	CreatedAt   time.Time          `json:"created_at" bson:"created_at"`
 	UpdatedAt   time.Time          `json:"updated_at" bson:"updated_at"`
-	Title       string             `json:"title" bson:"title"`
-	Description string             `json:"description" bson:"description"`
+	Title       string             `json:"title" bson:"title" validate:"required,alpha"`
+	Description string             `json:"description" bson:"description" validate:"required,alpha"`
+	IsActive    bool               `json:"is_active" bson:"is_active" validate:"required"`
 }
 
 // ProjectUser collection structure for projectUser
 type ProjectUser struct {
-	ID          primitive.ObjectID `json:"id" bson:"_id"`
+	ID          primitive.ObjectID `json:"id,omitempty" bson:"_id,omitempty"`
 	CreatedAt   time.Time          `json:"created_at" bson:"created_at"`
 	UpdatedAt   time.Time          `json:"updated_at" bson:"updated_at"`
 	ProjectID   primitive.ObjectID `json:"project_id" bson:"project_id"`
-	Email       string             `json:"email" bson:"email" validate:"required,email"`                 // TODO needs to decide of if we want to make it unique
-	PhoneNumber string             `json:"phone_number" bson:"phone_number" validate:"required,numeric"` // TODO needs to decide of if we want to make it unique
+	Email       string             `json:"email" bson:"email" validate:"required,email"`                 // TODO: needs to decide of if we want to make it unique
+	PhoneNumber string             `json:"phone_number" bson:"phone_number" validate:"required,numeric"` // TODO: needs to decide of if we want to make it unique
 	Name        string             `json:"name" bson:"name" validate:"required,alpha"`
 	Role        Role               `json:"role" bson:"role" validate:"required,oneof=ADMIN SUPERVISOR STAFF USER"`
 	IsActive    bool               `json:"is_active" bson:"is_active" validate:"required"`
@@ -55,8 +57,12 @@ type ProjectModeler interface {
 	Insert(project *Project) (interface{}, error)
 	ReadAll(filter interface{}) ([]Project, error)
 	ReadOne(filter interface{}) (Project, error)
-	LookupProjectDetails(filter bson.D, expfilter ProjectExpenseQS) (ProjectDetails, error)
+	UpdateOne(updatedData interface{}, filter interface{}) (int64, error)
+	LookupProjectDetails(filter bson.D, expfilter ProjectDetailsQS) (ProjectDetails, error)
 	InsertProjectUser(projectUser *ProjectUser) (interface{}, error)
+	ReadAllProjectUser(filter interface{}) ([]ProjectUser, error)
+	ReadOneProjectUser(filter interface{}) (ProjectUser, error)
+	UpdateOneProjectUser(updatedData interface{}, filter interface{}) (int64, error)
 }
 
 // ProjectModel godoc
@@ -113,8 +119,20 @@ func (c *ProjectModel) ReadOne(filter interface{}) (Project, error) {
 	return project, nil
 }
 
+// UpdateOne update one project from collections
+func (c *ProjectModel) UpdateOne(updatedData interface{}, filter interface{}) (int64, error) {
+	collection := c.db.Client.Database(c.db.DBName).Collection("projects")
+	atualizacao := bson.D{{Key: "$set", Value: updatedData}}
+	deleteResult, err := collection.UpdateOne(context.TODO(), filter, atualizacao)
+	if err != nil {
+		log.Fatal("Error on updating one Project", err)
+		return 0, err
+	}
+	return deleteResult.ModifiedCount, nil
+}
+
 // LookupProjectDetails parse all the project details with the project_id
-func (c *ProjectModel) LookupProjectDetails(projectFilter bson.D, expfilter ProjectExpenseQS) (ProjectDetails, error) {
+func (c *ProjectModel) LookupProjectDetails(projectFilter bson.D, qsFilter ProjectDetailsQS) (ProjectDetails, error) {
 	var project ProjectDetails
 	collection := c.db.Client.Database(c.db.DBName).Collection("projects")
 	pipeline := mongo.Pipeline{
@@ -146,13 +164,21 @@ func (c *ProjectModel) LookupProjectDetails(projectFilter bson.D, expfilter Proj
 					{"as", "expense"},
 					{"cond", bson.D{
 						{"$and", bson.A{
-							bson.D{{"$gte", bson.A{"$$expense.date", expfilter.Start}}},
-							bson.D{{"$lt", bson.A{"$$expense.date", expfilter.End}}},
+							bson.D{{"$gte", bson.A{"$$expense.date", qsFilter.Start}}},
+							bson.D{{"$lt", bson.A{"$$expense.date", qsFilter.End}}},
 						}},
 					}},
 				}},
 			}},
-			{"users", 1},
+			{"users", bson.D{
+				{"$filter", bson.D{
+					{"input", "$users"},
+					{"as", "user"},
+					{"cond", bson.D{
+						{"$eq", bson.A{"$$user.is_active", qsFilter.IsActive}},
+					}},
+				}},
+			}},
 		}}},
 	}
 
@@ -181,4 +207,49 @@ func (c *ProjectModel) InsertProjectUser(user *ProjectUser) (interface{}, error)
 		return nil, err
 	}
 	return insertResult.InsertedID, nil
+}
+
+// ReadAllProjectUser read all the projectUsers
+func (c *ProjectModel) ReadAllProjectUser(filter interface{}) ([]ProjectUser, error) {
+	var users []ProjectUser
+	collection := c.db.Client.Database(c.db.DBName).Collection("projectUsers")
+
+	cur, err := collection.Find(context.TODO(), filter)
+	if err != nil {
+		log.Printf("ERROR FINDING DATA: %v\n", err)
+		return users, err
+	}
+	for cur.Next(context.TODO()) {
+		var user ProjectUser
+
+		err = cur.Decode(&user)
+		if err != nil {
+			log.Printf("Error on Decoding the document: %v\n", err)
+		}
+
+		users = append(users, user)
+	}
+	log.Printf("documentReturned: %v\n", users)
+	return users, nil
+}
+
+// ReadOneProjectUser read a single project user
+func (c *ProjectModel) ReadOneProjectUser(filter interface{}) (ProjectUser, error) {
+	var project ProjectUser
+	collection := c.db.Client.Database(c.db.DBName).Collection("projectUsers")
+	projectReturned := collection.FindOne(context.TODO(), filter)
+	projectReturned.Decode(&project)
+	return project, nil
+}
+
+// UpdateOneProjectUser remove one project user from collections
+func (c *ProjectModel) UpdateOneProjectUser(updatedData interface{}, filter interface{}) (int64, error) {
+	collection := c.db.Client.Database(c.db.DBName).Collection("projectUsers")
+	atualizacao := bson.D{{Key: "$set", Value: updatedData}}
+	deleteResult, err := collection.UpdateOne(context.TODO(), filter, atualizacao)
+	if err != nil {
+		log.Fatal("Error on updating one Project User", err)
+		return 0, err
+	}
+	return deleteResult.ModifiedCount, nil
 }
